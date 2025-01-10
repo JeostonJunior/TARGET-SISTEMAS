@@ -1,49 +1,44 @@
-// Example of JSON with daily revenue data (in an array of objects format)
-const revenueJson = `[
-  {"day": 1, "revenue": 500},
-  {"day": 2, "revenue": 1500},
-  {"day": 3, "revenue": 0},
-  {"day": 4, "revenue": 3000},
-  {"day": 5, "revenue": null},
-  {"day": 6, "revenue": 2000},
-  {"day": 7, "revenue": 800},
-  {"day": 8, "revenue": 1200},
-  {"day": 9, "revenue": 2500},
-  {"day": 10, "revenue": 4500},
-  {"day": 11, "revenue": 1000},
-  {"day": 12, "revenue": 700}
-]`;
+import * as fs from 'fs';
 
 interface DailyRevenue {
-  day: number;
-  revenue: number | null;
+  dia: number;
+  valor: number;
 }
 
-function calculateRevenue(revenueJson: string): string {
-  const revenues: DailyRevenue[] = JSON.parse(revenueJson);
-
-  // Filter days with non-null and non-zero revenue
-  const validRevenues = revenues.filter(revenue => revenue.revenue !== null && revenue.revenue > 0);
+function calculateRevenue(revenues: DailyRevenue[]): string {
+  // Filter days with non-zero revenue
+  const validRevenues = revenues.filter(revenue => revenue.valor > 0);
 
   // Check if there are valid revenues
   if (validRevenues.length === 0) {
     return 'There is no valid revenue to calculate.';
   }
 
-  // Calculate the minimum and maximum revenue (filtering null values)
-  let minRevenue = Math.min(...validRevenues.map(r => r.revenue as number));
-  let maxRevenue = Math.max(...validRevenues.map(r => r.revenue as number));
+  // Calculate the minimum and maximum revenue
+  let minRevenue = Math.min(...validRevenues.map(r => r.valor));
+  let maxRevenue = Math.max(...validRevenues.map(r => r.valor));
 
   // Calculate the monthly average (ignoring days with no revenue)
-  let totalRevenue = validRevenues.reduce((acc, r) => acc + (r.revenue as number), 0);
+  let totalRevenue = validRevenues.reduce((acc, r) => acc + r.valor, 0);
   let monthlyAverage = totalRevenue / validRevenues.length;
 
   // Count the days with revenue higher than the average
-  let daysAboveAverage = validRevenues.filter(r => (r.revenue as number) > monthlyAverage).length;
-
+  let daysAboveAverage = validRevenues.filter(r => r.valor > monthlyAverage).length;
 
   return `Minimum revenue: ${minRevenue}\nMaximum revenue: ${maxRevenue}\nNumber of days with revenue above the average: ${daysAboveAverage}`;
 }
 
-// Example usage
-console.log(calculateRevenue(revenueJson));
+// Lê o arquivo dados.json
+fs.readFile('dados.json', 'utf8', (err, data) => {
+  if (err) {
+    console.error('Erro ao ler o arquivo:', err);
+    return;
+  }
+
+  // Converte o conteúdo do arquivo para um array de DailyRevenue
+  const revenues: DailyRevenue[] = JSON.parse(data);
+
+  // Usa a função calculateRevenue com os dados lidos
+  const result = calculateRevenue(revenues);
+  console.log(result);
+});
